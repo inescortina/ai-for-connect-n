@@ -2,7 +2,12 @@ package com.thg.accelerator23.connectn.ai.ultimatewinner;
 
 import com.thehutgroup.accelerator.connectn.player.*;
 
+import java.util.ArrayList;
 import java.util.Random;
+
+import static java.lang.Math.random;
+import static java.util.Collections.list;
+//import static sun.nio.ch.DatagramChannelImpl.AbstractSelectableChannels.forEach;
 
 
 public class UltimateWinner extends Player {
@@ -11,89 +16,112 @@ public class UltimateWinner extends Player {
     super(counter, UltimateWinner.class.getName());
   }
 
-  public MinimaxReturn minimax(Board board, int depth, boolean maximizingPlayer) {
-    BoardAnalyser boardAnalyser = new BoardAnalyser(board.getConfig());
-    GameState gameState = boardAnalyser.calculateGameState(board);
-    if (depth == 0 || gameState.isEnd()) {
-      if (gameState.isEnd()){
-        if (winningMove(board, "X")) {
-          return new MinimaxReturn( -1,1000000000);
-        } else if (winningMove(board, "O")) {
-          return new MinimaxReturn( -1,-1000000000);
-        } else {
-          return new MinimaxReturn(-1, 0);
-        }
+  public int evaluateWindow (Counter[] window, Counter counter) {
+    int score = 0;
+    Counter other = counter.getOther();
+    int playerCount = 0;
+    int otherCount = 0;
+    int emptyCount = 0;
+    for (Counter current : window){
+      if (current.getStringRepresentation() == counter.getStringRepresentation()){
+        playerCount++;
+      } else if (current.getStringRepresentation() == other.getStringRepresentation()) {
+        otherCount++;
       } else {
-        return new MinimaxReturn(-1, scorePosition());
+        emptyCount++;
       }
     }
-    if (maximizingPlayer) {
-      int value = 1000000000;
-      Random rand = new Random();
-      int upperbound = 10;
-      int randomColumn = rand.nextInt(upperbound);
-      int column = randomColumn;
-      for (int i=0; i < board.getConfig().getWidth(); i++) {
-        if (!board.hasCounterAtPosition(new Position(i, board.getConfig().getHeight()-1))){
-          Board boardCopy = new Board(board, )
-          placePiece
-          int newScore = minimax(boardCopy, depth-1, true).getValue();
-          if (newScore > value) {
-            value = newScore;
-            column = i;
-          }
-        };
-      } return new MinimaxReturn(column, value);
-    } else {
-      int value = -1000000000;
-      Random rand = new Random();
-      int upperbound = 10;
-      int randomColumn = rand.nextInt(upperbound);
-      int column = randomColumn;
-      for (int i=0; i < board.getConfig().getWidth(); i++) {
-        if (!board.hasCounterAtPosition(new Position(i, board.getConfig().getHeight()-1))){
-          placePiece
-          int newScore = minimax(boardCopy, depth-1, false).getValue();
-          if (newScore < value) {
-            value = newScore;
-            column = i;
-          }
-        };
-      } return new MinimaxReturn(column, value);
+    if (playerCount == 4) {
+      score += 100;
+    } else if (playerCount == 3 && emptyCount == 1) {
+      score += 5;
+    } else if (playerCount == 2 && emptyCount == 2) {
+      score += 2;
+    }if (otherCount == 3 && emptyCount == 1) {
+      score -= 4;
+    }
+    return score;
+  }
+
+  //minute 15
+  public int scorePosition (Board board, Counter counter) {
+    int score = 0;
+
+    // Horizontal
+    for (int r = 0; r < board.getConfig().getHeight(); r++) {
+      //ArrayList row = new ArrayList();
+      for (int c = 0; c < board.getConfig().getWidth() - 3; c++) {
+        //row.add(board.getCounterAtPosition(new Position(r, c)));
+        Counter [] window = new Counter [4];
+        for (int i = 0; i < window.length; i++) {
+          window [i] = board.getCounterAtPosition(new Position(c+i, r));
+        }
+        score += evaluateWindow(window, counter);
+//        Counter [] window2 = {
+//                board.getCounterAtPosition(new Position(c, r)),
+//                board.getCounterAtPosition(new Position(c+1, r)),
+//                board.getCounterAtPosition(new Position(c+2, r)),
+//                board.getCounterAtPosition(new Position(c+3, r))
+        //};
+      }
+    }
+    // Vertical
+    for (int c = 0; c < board.getConfig().getWidth(); c++) {
+      for (int r = 0; r < board.getConfig().getHeight() - 3; r++) {
+        Counter[] window = new Counter[4];
+        for (int i = 0; i < window.length; i++) {
+          window[i] = board.getCounterAtPosition(new Position(c, r + i));
+        }
+        score += evaluateWindow(window, counter);
+      }
     }
 
+    // Diagonal /
+    for (int c = 0; c < board.getConfig().getWidth() - 3; c++) {
+      for (int r = 0; r < board.getConfig().getHeight() - 3; r++) {
+        Counter[] window = new Counter[4];
+        for (int i = 0; i < window.length; i++) {
+          window[i] = board.getCounterAtPosition(new Position(c + i, r + i));
+        }
+        score += evaluateWindow(window, counter);
+      }
+    }
+
+    // Opposite Diagonal \
+    for (int c = 0; c < board.getConfig().getWidth() - 3; c++) {
+      for (int r = 0; r < board.getConfig().getHeight() - 3; r++) {
+        Counter[] window = new Counter[4];
+        for (int i = 0; i < window.length; i++) {
+          window[i] = board.getCounterAtPosition(new Position(c + 3 - i, r + i));
+        }
+        score += evaluateWindow(window, counter);
+      }
+    }
+    return score;
   }
 
   @Override
   public int makeMove(Board board) {
+    return scorePosition(board, Counter.O);
+  }
+
     //TODO: some crazy analysis
     //TODO: make sure said analysis uses less than 2G of heap and returns within 10 seconds on whichever machine is running it
-    minimax(board, depth, whichTurn)
-      if depth is 0 or the game is over:
-        return None, score
-
-      if it is your turn
-            for ( i<width){
-              if(isvalid){
-                1. make a copy
-                2. place a counter
-                3. call minimax() as opponent side
-                4. if the score is value
-              }
-            }
+//    minimax(board, depth, whichTurn)
+//      if depth is 0 or the game is over:
+//        return None, score
+//
+//      if it is your turn
+//            for ( i<width){
+//              if(isvalid){
+//                1. make a copy
+//                2. place a counter
+//                3. call minimax() as opponent side
+//                4. if the score is value
 
 
 
-    Random rand = new Random();
 
 
-    int upperbound = 10;
-    int randomColumn = rand.nextInt(upperbound);
-    System.out.println();
-    if (!board.hasCounterAtPosition(new Position(4, board.getConfig().getHeight()-1))){
-      return 4;
-    } else {
-      return randomColumn;
-    }
-  }
+
 }

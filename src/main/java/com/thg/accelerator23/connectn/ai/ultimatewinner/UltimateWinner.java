@@ -3,6 +3,7 @@ package com.thg.accelerator23.connectn.ai.ultimatewinner;
 import com.thehutgroup.accelerator.connectn.player.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 import static java.lang.Math.random;
@@ -16,18 +17,46 @@ public class UltimateWinner extends Player {
     super(counter, UltimateWinner.class.getName());
   }
 
-  public int evaluateWindow (Counter[] window, Counter counter) {
+//  public int evaluateWindow (Counter[] window, Counter counter) {
+//    int score = 0;
+//    Counter other = counter.getOther();
+//    int playerCount = 0;
+//    int otherCount = 0;
+//    int emptyCount = 0;
+//    for (Counter current : window){
+//      if (current.getStringRepresentation() == counter.getStringRepresentation()){
+//        playerCount++;
+//      } else if (current.getStringRepresentation() == other.getStringRepresentation()) {
+//        otherCount++;
+//      } else {
+//        emptyCount++;
+//      }
+//    }
+//    if (playerCount == 4) {
+//      score += 100;
+//    } else if (playerCount == 3 && emptyCount == 1) {
+//      score += 5;
+//    } else if (playerCount == 2 && emptyCount == 2) {
+//      score += 2;
+//    }if (otherCount == 3 && emptyCount == 1) {
+//      score -= 4;
+//    }
+//    return score;
+//  }
+
+public int evaluateWindow (Counter[] window, Counter counter) {
     int score = 0;
     Counter other = counter.getOther();
     int playerCount = 0;
     int otherCount = 0;
     int emptyCount = 0;
     for (Counter current : window){
-      if (current.getStringRepresentation() == counter.getStringRepresentation()){
-        playerCount++;
-      } else if (current.getStringRepresentation() == other.getStringRepresentation()) {
+      if (current != null) {
+        if (current.getStringRepresentation() == counter.getStringRepresentation()){
+          playerCount++;
+        } else if (current.getStringRepresentation() == other.getStringRepresentation()) {
         otherCount++;
-      } else {
+        }} else {
         emptyCount++;
       }
     }
@@ -43,15 +72,24 @@ public class UltimateWinner extends Player {
     return score;
   }
 
+
   //minute 15
   public int scorePosition (Board board, Counter counter) {
     int score = 0;
 
+    // Center
+    int centerPosition = board.getConfig().getWidth()/2;
+    ArrayList<Counter> centerArray = new ArrayList<>();
+    for (int n = 0; n < board.getConfig().getHeight(); n++) {
+      centerArray.add(board.getCounterAtPosition(new Position(centerPosition, n)));
+    }
+    int centerCount = Collections.frequency(centerArray, counter);
+    score += centerCount * 3;
+
+
     // Horizontal
     for (int r = 0; r < board.getConfig().getHeight(); r++) {
-      //ArrayList row = new ArrayList();
       for (int c = 0; c < board.getConfig().getWidth() - 3; c++) {
-        //row.add(board.getCounterAtPosition(new Position(r, c)));
         Counter [] window = new Counter [4];
         for (int i = 0; i < window.length; i++) {
           window [i] = board.getCounterAtPosition(new Position(c+i, r));
@@ -102,7 +140,9 @@ public class UltimateWinner extends Player {
 
   @Override
   public int makeMove(Board board) {
-    return scorePosition(board, Counter.O);
+    int score = scorePosition(board, Counter.O);
+    System.out.println(score);
+    return 0;
   }
 
     //TODO: some crazy analysis

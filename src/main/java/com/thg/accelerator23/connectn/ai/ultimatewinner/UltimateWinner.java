@@ -46,10 +46,27 @@ public class UltimateWinner extends Player {
 //    System.out.println(test);
 //    int test2 = scorePosition(board, this.getCounter());
 //    System.out.println(test2);
-    int column = minimax(board, 1, true).getColumn();
 
-    return column;
+    MinimaxReturn ans = minimax(board, 1, true);
+    if (!board.hasCounterAtPosition(new Position(ans.getColumn(), board.getConfig().getHeight()-1))){
+      System.out.println("O's turn");
+      System.out.println(ans.getValue());
+      System.out.println(ans.getColumn());
+      return ans.getColumn();
+    } else {
+      for (int i=0; i < board.getConfig().getHeight(); i++) {
+        if (!board.hasCounterAtPosition(new Position(i, board.getConfig().getHeight()-1))) {
+          return i;
+        }
+      } return 9;
+    }
+
   }
+
+  public boolean isTerminalNode(Board board) {
+    return winningMove(board, this.getCounter()) || winningMove(board, this.getCounter().getOther());
+  }
+
   public MinimaxReturn minimax(Board board, int depth, boolean maximizingPlayer) {
     BoardAnalyser boardAnalyser = new BoardAnalyser(board.getConfig());
     GameState gameState = boardAnalyser.calculateGameState(board);
@@ -73,8 +90,7 @@ public class UltimateWinner extends Player {
         if (!board.hasCounterAtPosition(new Position(i, board.getConfig().getHeight()-1))){
           try {
             Board boardCopy = new Board(board, i, this.getCounter());
-            int newScore = minimax(boardCopy, depth-1, true).getValue();
-
+            int newScore = minimax(boardCopy, depth-1, false).getValue();
             if (newScore > value) {
               value = newScore;
               column = i;
@@ -91,7 +107,7 @@ public class UltimateWinner extends Player {
         if (!board.hasCounterAtPosition(new Position(i, board.getConfig().getHeight()-1))){
           try {
             Board boardCopy = new Board(board, i, this.getCounter().getOther());
-            int newScore = minimax(boardCopy, depth - 1, false).getValue();
+            int newScore = minimax(boardCopy, depth - 1, true).getValue();
 
             if (newScore < value) {
               value = newScore;
@@ -168,15 +184,15 @@ public class UltimateWinner extends Player {
       }
     }
     if (playerCount == 4) {
-      score += 1500;
-    } else if (playerCount == 3 && emptyCount == 1) {
-      score += 300;
-    } else if (playerCount == 2 && emptyCount == 2) {
       score += 100;
+    } else if (playerCount == 3 && emptyCount == 1) {
+      score += 5;
+    } else if (playerCount == 2 && emptyCount == 2) {
+      score += 2;
     }if (otherCount == 3 && emptyCount == 1) {
-      score -= 1000;
+      score -= 4;
     } else if (otherCount == 2 && emptyCount == 2) {
-      score -= 500;
+      score -= 1;
     }
     return score;
   }
